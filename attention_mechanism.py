@@ -60,4 +60,4 @@ class GroupedQueryAttention(nn.module):
         v = self.v_proj(x).view(B,S,self.num_kv_heads, self.head_dim) #(2,512,192)->view:(2,512,3,64)
 
         k = k.repeat_interleave(self.num_groups, dim=2) #repeate heads 4(group_size) times so num of head for k became 12 = query heads for attn calculation.
-        v = v.repeat_interleave(self.num_groups, dim=2) #repeate heads 4(group_size) times so num of head for k became 12 = query heads for attn calculation.
+        v = v.repeat_interleave(self.num_groups, dim=2) #repeate heads 4(group_size) times so num of head for k became 12 = query heads for attn calculation
