@@ -38,5 +38,5 @@ class MultiHeadAttention(nn.Module):
         v     = self.v_proj(x).view(B,S,self.num_heads,self.head_dim).transpose(1,2) #(2,512,12,64)->transpose->(2,12,512,64)
         out   = causal_attention(q,k,v) #(2, 12, 512, 64)
         return self.out_proj(
-            out.transpose(1,2).contiguous().view(B,S,-1) #(2,512,768
+            out.transpose(1,2).contiguous().view(B,S,-1) #(2,512,768)
         ) 
