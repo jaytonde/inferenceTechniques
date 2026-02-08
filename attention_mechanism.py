@@ -1,5 +1,6 @@
 import math
 import torch
+from torch import nn
 
 def attention(q,k,v):
     d_k     = q.shape[-1] #(B, H, Lq, D)
@@ -59,5 +60,16 @@ class GroupedQueryAttention(nn.module):
         k = self.k_proj(x).view(B,S,self.num_kv_heads, self.head_dim) #(2,512,192)->view:(2,512,3,64)
         v = self.v_proj(x).view(B,S,self.num_kv_heads, self.head_dim) #(2,512,192)->view:(2,512,3,64)
 
-        k = k.repeat_interleave(self.num_groups, dim=2) #repeate heads 4(group_size) times so num of head for k became 12 = query heads for attn calculation.
+        k = k.repeat_interleave(self.num_groups, dim=2) #repeate heads 4(group_size) times so num of head for k became 12 = query heads for attn calculation
         v = v.repeat_interleave(self.num_groups, dim=2) #repeate heads 4(group_size) times so num of head for k became 12 = query heads for attn calculation
+
+
+
+class FeedForward(nn.Module):
+    def __init__(self, hidden_dim, intermediate_dim):
+        super.__init__()
+        self.w1 = nn.Linear(hidden_dim, intermediate_dim)
+        self.w2 = nn.Linear(intermediate_dim, hidden_dim)
+
+    def forward(self, x):
+        return self.w2(torch.relu(self.w1(x)))
