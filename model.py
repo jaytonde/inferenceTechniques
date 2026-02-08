@@ -34,3 +34,11 @@ class Transformer(nn.Module):
         for layer in self.layers:
             x = layer(x)
         return self.lm_head(self.norm(x))
+
+
+def decode_attention(q_new, k_cache, v_cache, k_new, v_env):
+    k_cache = torch.cat([k_cache, k_new], dim=-2)
+    v_cache = torch.cat([v_cache, v_new], dim=-2)
+    scores  = torch.matmul(q_new, k_cache.transpose(-2,-1)) / math.sqrt(q_new.shape[-1])
+    out     = torch.matmul(torch.softmax(scores, dim=-1), v_cache)
+    return out, k_cache, v_cache
