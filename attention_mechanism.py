@@ -108,3 +108,38 @@ class KVCache:
         k = self.k_cache[layer_idx, :self.seq_len]
         v = self.v_cache[layer_idx, :self.seq_len]
         return k,v
+
+def prefill_with_cache(model, prompt_ids, cache):
+    x = model.embed(prompt_ids)
+
+    for layer_idx, layer in enumerate(model.layers):
+        q = layer.q_proj(x)
+        k = layer.k_proj(x)
+        v = layer.v_proj(x)
+
+        cache.update(layer_idx, k, v)
+
+        x = x + attention(q, k, v)
+        x = x + layer.ffn(q, k, v)
+
+    cache.advance(prompt_ids.shape[1])
+    return model.lm_head(x)
+
+def decode_with_cache(model, token_id, cache):
+    x = model.embed(token_id)
+
+    for layer_idx, layer in enumerate(model.layers):
+        q       = layer.q_proj(x)
+        k_new   = layer.k_proj(x)
+        v_new   = layer.v_proj(x)
+
+        cache.update(layer_idx, k_new, v_new)
+
+        k_full, v_full = cache.get(layer_idx)
+
+        x = x + attention(q, k_full, v_full)
+        x = x + layer.ffn(x)
+
+    cache.advance(1)
+
+    return model.lm_head(x)[:,-1,:]
