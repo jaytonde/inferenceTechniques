@@ -86,3 +86,25 @@ class SwiGLU(nn.Module):
         return self.w2(
             F.silu(self.w1(x)) * self.w3(x)
         )
+
+
+class KVCache:
+    def __init__(self, num_layers, max_seq_len, num_heads, head_dim, dtype):
+        self.seq_len = 0
+
+        shape        = (num_layers, max_seq_len, num_heads, head_dim)
+        self.k_cache = torch.zeros(shape, dtype=dtype)
+        self.v_cache = torch.zeros(shape, dtype=dtype)
+
+    def update(self, layer_idx, k, v):
+        n         = k.shape[1]
+        start     = self.seq_len
+        end       = self.seq_len + n
+
+        self.k_cache[layer_idx, start:end] = k
+        self.v_cache[layer_idx, start:end] = v
+
+    def get(self, layer_idx):
+        k = self.k_cache[layer_idx, :self.seq_len]
+        v = self.v_cache[layer_idx, :self.seq_len]
+        return k,v
